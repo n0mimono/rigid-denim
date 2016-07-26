@@ -25,4 +25,12 @@ public static class Utility {
 		return new Vector3(0f, trans.eulerAngles.z, 0f);
 	}
 
+	public static string ToString(this object obj, Color color) {
+		return string.Format("<color={0}>{1}</color>", ColorUtility.ToHtmlStringRGBA(color), obj);
+	}
+
+	public static void Log(this object obj, object message) {
+		Debug.Log(obj + ": " + message);
+	}
+
 }
