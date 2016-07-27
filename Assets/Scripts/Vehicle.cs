@@ -11,9 +11,6 @@ public class Vehicle : VehicleBase {
 	protected override void UpdatePosition() {
 		// cache update
 		position += forward * speed * Time.deltaTime;
-
-		// actual update
-		rigid.SetTransform(position, angles);
 	}
 
 }

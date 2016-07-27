@@ -43,9 +43,6 @@ public class GoKart : VehicleBase {
 			mov = forward * speed * Time.deltaTime;
 			position += mov;
 		}
-
-		// actual update
-		rigid.SetTransform(position, angles);
 	}
 
 }

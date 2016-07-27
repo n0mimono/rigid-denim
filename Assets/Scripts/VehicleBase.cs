@@ -5,7 +5,6 @@ public class VehicleBase : MonoBehaviour {
 	[Header("Rigidbody Management")]
 	public Rigidbody rigid;
 	public Vector3   position;
-	public Vector3   angles;
 	public Vector3   forward;
 
 	[Header("Moving")]
@@ -16,7 +15,12 @@ public class VehicleBase : MonoBehaviour {
 		ForceUpdate();
 
 		this.Update(() => {
+			// cache update
 			UpdatePosition();
+
+			// actual update
+			rigid.SetTransform(position, forward);
+
 		}, seconds).StartBy(this);
 	}
 
@@ -24,8 +28,7 @@ public class VehicleBase : MonoBehaviour {
 	}
 
 	protected void ForceUpdate() {
-		position = transform.FreesePosition();
-		angles   = transform.FreeseAngles();
+		position = transform.position;
 		forward  = transform.forward;
 	}
 
