@@ -17,12 +17,32 @@ public static class Utility {
 		behav.StartCoroutine(routine);
 	}
 
+	public static Vector3 FreesePosition(this Vector3 position) {
+		return new Vector3(position.x, 0f, position.z);
+	}
+
+	public static Vector3 FreeseAngles(this Vector3 eulerAngles) {
+		return new Vector3(0f, eulerAngles.z, 0f);
+	}
+
 	public static Vector3 FreesePosition(this Transform trans) {
-		return new Vector3(trans.position.x, 0f, trans.position.z);
+		return trans.position.FreesePosition();
 	}
 
 	public static Vector3 FreeseAngles(this Transform trans) {
-		return new Vector3(0f, trans.eulerAngles.z, 0f);
+		return trans.position.FreeseAngles();
+	}
+
+	public static void SetTransform(this Rigidbody rigid, Vector3 position, Vector3 eulerAngles) {
+		Vector3    pos = position.FreesePosition();
+		Quaternion rot = Quaternion.Euler(eulerAngles.FreeseAngles());
+		if (rigid.isKinematic) {
+			rigid.position = pos;
+			rigid.rotation = rot;
+		} else {
+			rigid.MovePosition(pos);
+			rigid.MoveRotation(rot);
+		}
 	}
 
 	public static string ToString(this object obj, Color color) {

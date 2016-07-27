@@ -13,8 +13,7 @@ public class Vehicle : VehicleBase {
 		position += forward * speed * Time.deltaTime;
 
 		// actual update
-		rigid.MovePosition(position);
-		rigid.MoveRotation(Quaternion.Euler(angles));
+		rigid.SetTransform(position, angles);
 	}
 
 }
