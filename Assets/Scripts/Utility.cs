@@ -40,11 +40,9 @@ public static class Utility {
 		if (rigid.isKinematic) {
 			rigid.position = pos;
 			rigid.rotation = rot;
-
-
 		} else {
 			rigid.MovePosition(pos);
-			rigid.MoveRotation(rot);
+      rigid.MoveRotation(rot);
 		}
 	}
 

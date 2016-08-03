@@ -26,7 +26,7 @@ public class GoKart : VehicleBase {
 	}
 
 	protected override void UpdatePosition() {
-		if (hasColllision) {
+    if (hasColllision) {
 			// rollback
 			position -= mov * backScale;
 			hasColllision = false;
@@ -43,6 +43,7 @@ public class GoKart : VehicleBase {
 			mov = forward * speed * Time.deltaTime;
 			position += mov;
 		}
+
 	}
 
 }
