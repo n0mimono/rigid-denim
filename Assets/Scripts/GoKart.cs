@@ -7,12 +7,14 @@ public class GoKart : VehicleBase {
 	public  float   kickScale;
 	public  float   kickDamp;
 	public  float   kickEps;
+  public  float   torqueScale;
 
 	// state
 	private Vector3 mov;
 	private bool    hasColllision;
 
 	private Vector3 kick;
+  private float   torque;
 	private bool    hasKick;
 
 	private void OnTriggerStay(Collider other) {
@@ -21,7 +23,10 @@ public class GoKart : VehicleBase {
 
 		// kick
 		Vector3 hitPoint = other.ClosestPointOnBounds(position);
-		kick = (position - hitPoint).normalized * kickScale;
+    Vector3 kickDir = (position - hitPoint).normalized;
+    kick = kickDir * kickScale;
+    torque = Vector3.Cross(forward, kickDir).y * torqueScale;
+
 		hasKick = true;
 	}
 
@@ -35,6 +40,7 @@ public class GoKart : VehicleBase {
 		if (hasKick) {
 			// kick
 			position += kick * Time.deltaTime;
+      forward = Quaternion.AngleAxis(kick.magnitude * torque, Vector3.up) * forward;
 			// damping
 			kick = Vector3.Lerp(kick, Vector3.zero, kickDamp * Time.deltaTime);
 			hasKick = kick.magnitude > kickEps;
@@ -43,7 +49,6 @@ public class GoKart : VehicleBase {
 			mov = forward * speed * Time.deltaTime;
 			position += mov;
 		}
-
 	}
 
 }
