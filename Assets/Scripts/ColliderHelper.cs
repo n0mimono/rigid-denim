@@ -64,8 +64,8 @@ public class ColliderHelper : MonoBehaviour {
   private float NearestDistOnVerteces(Vector3 point, out Vector3 pos) {
     Matrix4x4 l2w = trans.localToWorldMatrix;
 
-    Vector3 minPoint = trans.position;
-    float   minDist  = Vector3.Distance(point, minPoint);
+    Vector3 minPoint = Vector3.zero;
+    float   minDist  = 100000f;
     for (int i = 0; i < verteces.Length; i++) {
       Vector3 v = l2w.MultiplyPoint(verteces [i]);
       float   d = Vector3.Distance (point, v);
@@ -87,7 +87,7 @@ public class ColliderHelper : MonoBehaviour {
     float   minDist  = condDist;
 
     for (int i = 0; i < verteces.Length; i++) {
-      float   d = distances[i];
+      //float   d = distances[i];
       //if (d > condDist + 1e-5) continue;
 
       List<int> tris = v2t [i];
@@ -116,6 +116,7 @@ public class ColliderHelper : MonoBehaviour {
 
 public static class ColliderHelperUtility {
   public static HideFlags hideFlags = HideFlags.None;
+  public static int iteration = 1;
 
   public static ColliderHelper InitializeColliderHelper(this Collider collider) {
     ColliderHelper helper = collider.GetComponent<ColliderHelper> ();
@@ -143,6 +144,25 @@ public static class ColliderHelperUtility {
     }
 
     return helper.ClosestPointOnMesh(point);
+  }
+
+  public static bool HitTo(this Collider collider, Collider other, out Vector3 hitPoint) {
+    Vector3 basePoint = collider.transform.position;
+    Vector3 revPoint = basePoint;
+    Vector3 fwdPoint = Vector3.zero;
+   
+    for (int i = 0; i < iteration; i++) {
+      fwdPoint = other.ClosestPointOnMesh (revPoint);
+      revPoint = collider.ClosestPointOnMesh (fwdPoint);
+    }
+
+    float fwdDist = Vector3.Distance (basePoint, fwdPoint);
+    float revDist = Vector3.Distance (basePoint, revPoint);
+    bool isHit = fwdDist < revDist;
+    //Vector3.Distance(fwdPoint, revPoint) < 0.1f;
+
+    hitPoint = revPoint;
+    return isHit;
   }
 
 }
