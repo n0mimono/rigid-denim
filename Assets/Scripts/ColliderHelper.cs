@@ -14,6 +14,8 @@ public class ColliderHelper : MonoBehaviour {
   private float[]   distances;
   private List<List<int>> v2t;
 
+  private event Action<GameObject, Vector3> call;
+
   public void Initialize(Collider collider) {
     trans = collider.transform;
 
@@ -112,6 +114,20 @@ public class ColliderHelper : MonoBehaviour {
     return minPoint;
   }
 
+  public void AddCollisionListener(Action<GameObject, Vector3> callOnCollision) {
+    call += callOnCollision;
+  }
+
+  public void RemoveCollisionListener(Action<GameObject, Vector3> callOnCollision) {
+    call -= callOnCollision;
+  }
+
+  public void InvokeCollisionEvent(GameObject other, Vector3 point) {
+    if (call != null) {
+      call (other, point);
+    }
+  }
+
 }
 
 public static class ColliderHelperUtility {
@@ -128,22 +144,21 @@ public static class ColliderHelperUtility {
     return helper;
   }
 
-  public static Vector3 ClosestPointOnVerteces(this Collider collider, Vector3 point) {
+  public static ColliderHelper GetColliderHelper(this Collider collider) {
     ColliderHelper helper = collider.GetComponent<ColliderHelper> ();
     if (helper == null) {
       helper = collider.InitializeColliderHelper ();
     }
 
-    return helper.ClosestPointOnVerteces(point);
+    return helper;
+  }
+
+  public static Vector3 ClosestPointOnVerteces(this Collider collider, Vector3 point) {
+    return collider.GetColliderHelper().ClosestPointOnVerteces(point);
   }
 
   public static Vector3 ClosestPointOnMesh(this Collider collider, Vector3 point) {
-    ColliderHelper helper = collider.GetComponent<ColliderHelper> ();
-    if (helper == null) {
-      helper = collider.InitializeColliderHelper ();
-    }
-
-    return helper.ClosestPointOnMesh(point);
+    return collider.GetColliderHelper().ClosestPointOnMesh(point);
   }
 
   public static bool HitTo(this Collider collider, Collider other, out Vector3 hitPoint) {
@@ -164,4 +179,29 @@ public static class ColliderHelperUtility {
     return isHit;
   }
 
+  public static bool HitTo(this ColliderHelper helper, ColliderHelper other, out Vector3 hitPoint) {
+    Vector3 basePoint = helper.transform.position;
+    Vector3 revPoint = basePoint;
+    Vector3 fwdPoint = Vector3.zero;
+
+    for (int i = 0; i < iteration; i++) {
+      fwdPoint = other.ClosestPointOnMesh (revPoint);
+      revPoint = helper.ClosestPointOnMesh (fwdPoint);
+    }
+
+    float fwdDist = Vector3.Distance (basePoint, fwdPoint);
+    float revDist = Vector3.Distance (basePoint, revPoint);
+    bool isHit = fwdDist < revDist;
+
+    hitPoint = revPoint;
+    return isHit;
+  }
+
+  public static void AddCollisionListener(this Collider collider, Action<GameObject, Vector3> callOnCollision) {
+    collider.GetColliderHelper().AddCollisionListener(callOnCollision);
+  }
+
+  public static void RemoveCollisionListener(this Collider collider, Action<GameObject, Vector3> callOnCollision) {
+    collider.GetColliderHelper().RemoveCollisionListener(callOnCollision);
+  }
 }
