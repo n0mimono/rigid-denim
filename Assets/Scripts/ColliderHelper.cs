@@ -159,7 +159,6 @@ public static class ColliderHelperUtility {
     float fwdDist = Vector3.Distance (basePoint, fwdPoint);
     float revDist = Vector3.Distance (basePoint, revPoint);
     bool isHit = fwdDist < revDist;
-    //Vector3.Distance(fwdPoint, revPoint) < 0.1f;
 
     hitPoint = revPoint;
     return isHit;
