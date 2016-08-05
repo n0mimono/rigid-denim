@@ -18,7 +18,7 @@ namespace EasyPhysics {
     private int[]      triangles;
 
     private Vector3[]  wverts;
-    private float[]    distances;
+    private float[]    distances2;
     private List<List<int>> v2t;
 
     public delegate void CollisionHandler(EasyCollider other, Vector3 hitPoint);
@@ -34,12 +34,12 @@ namespace EasyPhysics {
       this.trans = trans;
       this.layer = layer;
      
-      verteces  = mesh.vertices;
-      triangles = mesh.triangles;
-      bounds    = new Bounds(Vector3.zero, Vector3.one * mesh.bounds.size.Max());
+      verteces   = mesh.vertices;
+      triangles  = mesh.triangles;
+      bounds     = new Bounds(Vector3.zero, Vector3.one * mesh.bounds.size.Max());
 
-      wverts    = new Vector3[verteces.Length];
-      distances = new float[verteces.Length];
+      wverts     = new Vector3[verteces.Length];
+      distances2 = new float[verteces.Length];
 
       // pre calculations
       v2t = new List<List<int>> ();
@@ -65,39 +65,38 @@ namespace EasyPhysics {
 
     public Vector3 ClosestPointOnMesh(Vector3 point) {
       Vector3 pos;
-      float pointDist = NearestDistOnVerteces (point, out pos);
-      return FindNearestPoint (point, pointDist, pos);
+      float pointDist2 = NearestDistOnVerteces (point, out pos);
+      return FindNearestPoint (point, pointDist2, pos);
     }
 
     private float NearestDistOnVerteces(Vector3 point, out Vector3 pos) {
       Matrix4x4 l2w = trans.localToWorldMatrix;
 
       Vector3 minPoint = Vector3.zero;
-      float   minDist  = 100000f;
+      float   minDist2 = 10000000f;
       for (int i = 0; i < verteces.Length; i++) {
-        Vector3 v = l2w.MultiplyPoint(verteces [i]);
-        float   d = Vector3.Distance (point, v);
-        if (d < minDist) {
-          minDist  = d;
+        Vector3 v  = l2w.MultiplyPoint(verteces [i]);
+        float   d2 = Vector3.SqrMagnitude (point - v);
+        if (d2 < minDist2) {
+          minDist2 = d2;
           minPoint = v;
         }
 
         wverts [i] = v;
-        distances [i] = d;
+        distances2 [i] = d2;
       }
 
       pos   = minPoint;
-      return minDist;
+      return minDist2;
     }
 
-    private Vector3 FindNearestPoint(Vector3 point, float condDist, Vector3 condPoint) {
+    private Vector3 FindNearestPoint(Vector3 point, float condDist2, Vector3 condPoint) {
       Vector3 minPoint = condPoint;
-      float   minDist  = condDist;
+      float   minDist2 = condDist2;
 
       for (int i = 0; i < verteces.Length; i++) {
-        // todo: thresholding based on vertex-distance
-        //float   d = distances[i];
-        //if (d > condDist + 1e-5) continue;
+        float d2 = distances2[i];
+        if (d2 > condDist2 + 1e-5) continue;
 
         List<int> tris = v2t [i];
         for (int j = 0; j < tris.Count; j++) {
@@ -108,11 +107,11 @@ namespace EasyPhysics {
           Barycentric bc = new Barycentric (p0, p1, p2, point);
 
           Vector3 hitPoint = bc.InterpolateInside(p0, p1, p2);
-          float   hitDist  = Vector3.Distance(point, hitPoint);
+          float   hitDist  = Vector3.SqrMagnitude(point - hitPoint);
 
-          if (hitDist < minDist) {
+          if (hitDist < minDist2) {
             minPoint = hitPoint;
-            minDist  = hitDist;
+            minDist2  = hitDist;
           }
         }
 
@@ -135,9 +134,9 @@ namespace EasyPhysics {
         revPoint = ClosestPointOnMesh (fwdPoint);
       }
 
-      float fwdDist = Vector3.Distance (basePoint, fwdPoint);
-      float revDist = Vector3.Distance (basePoint, revPoint);
-      bool isHit = fwdDist < revDist;
+      float fwdDist2 = Vector3.SqrMagnitude (basePoint - fwdPoint);
+      float revDist2 = Vector3.SqrMagnitude (basePoint - revPoint);
+      bool isHit = fwdDist2 < revDist2;
 
       hitPoint = revPoint;
       return isHit;
