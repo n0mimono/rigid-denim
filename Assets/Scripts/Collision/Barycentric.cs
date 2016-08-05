@@ -111,9 +111,7 @@ namespace EasyPhysics {
     private Vector3 PutInside(Vector3 v1, Vector3 v2, Vector3 q) {
       Vector3 p = q - v1;
       Vector3 r = v2 - v1;
-      Vector3 u = r.normalized;
-      float c = Vector3.Dot (p, u);
-      float a = c / r.magnitude;
+      float a = Vector3.Dot (p, r);
       if (a < 0f) {
         return v1;
       } else if (a > 1f) {
