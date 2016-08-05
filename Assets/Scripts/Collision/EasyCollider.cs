@@ -84,7 +84,7 @@ namespace EasyPhysics {
         List<int> nexts = new List<int> (); 
 
         for (int j = 0; j < verteces.Length; j++) {
-          if (Vector3.SqrMagnitude (v - verteces [j]) < 1e-2) {
+          if (Vector3.SqrMagnitude (v - verteces [j]) < 1e-5) {
             joints.Add (j);
 
             List<int> triangleIndeces = v2t [j];
