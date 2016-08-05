@@ -1,31 +1,30 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 using System;
 
 namespace EasyPhysics {
 
-  public partial class EasyCollider : MonoBehaviour {
-    public  bool       initOnStart = true;
+  public class EasyCollider : MonoBehaviour {
+    public  bool       initOnStart;
 
-    public  Mesh       mesh  { set; get; }
-    public  int        layer { set; get; }
-    public  Transform  trans { set; get; }
+    public  Mesh       mesh   { set; get; }
+    public  int        layer  { set; get; }
+    public  Transform  trans  { set; get; }
+    public  Bounds     bounds { set; get; }
+    public  Bounds     worldBounds { get { return new Bounds (trans.position, bounds.size); } }
 
-    private Vector3[] verteces;
-    private int[]     triangles;
-    private Bounds    bounds;
+    private Vector3[]  verteces;
+    private int[]      triangles;
 
-    private Vector3[] wverts;
-    private float[]   distances;
+    private Vector3[]  wverts;
+    private float[]    distances;
     private List<List<int>> v2t;
-
-    public delegate void CollisionHandler(GameObject other, Vector3 hitPoint);
-    public event CollisionHandler OnCollision;
 
     void Start() {
       if (initOnStart) {
-        Initialize (GetComponent<MeshFilter> ().mesh, transform, gameObject.layer);
+        Initialize ();
       }
     }
 
@@ -50,6 +49,10 @@ namespace EasyPhysics {
         int triangleIndex = j / 3;
         v2t [vertexIndex].Add (triangleIndex);
       }
+    }
+
+    public void Initialize() {
+      Initialize (GetComponent<MeshFilter> ().mesh, transform, gameObject.layer);
     }
 
     public Vector3 ClosestPointOnVerteces(Vector3 point) {
@@ -117,12 +120,7 @@ namespace EasyPhysics {
     }
 
     public bool HitByAABB(EasyCollider other) {
-      Bounds curBounds = bounds;
-      curBounds.center = trans.position;
-      Bounds othBounds = other.bounds;
-      othBounds.center = other.trans.position;
-
-      return curBounds.Intersects (othBounds);
+      return worldBounds.Intersects (other.worldBounds);
     }
 
     public bool HitTo(EasyCollider other, out Vector3 hitPoint) {
@@ -130,7 +128,7 @@ namespace EasyPhysics {
       Vector3 revPoint = basePoint;
       Vector3 fwdPoint = Vector3.zero;
 
-      for (int i = 0; i < iterationCount; i++) {
+      for (int i = 0; i < EasyPhysics.iterationCount; i++) {
         fwdPoint = other.ClosestPointOnMesh (revPoint);
         revPoint = ClosestPointOnMesh (fwdPoint);
       }
@@ -143,10 +141,28 @@ namespace EasyPhysics {
       return isHit;
     }
 
-  }
+    public void BihitAndInvokeCollision(EasyCollider other) {
+      Vector3 point0, point1;
+      bool isHit0 = HitTo (other, out point0);
+      bool isHit1 = other.HitTo (this, out point1);
 
-  public partial class EasyCollider {
-    public static int iterationCount = 1;
+      if (isHit0) {
+        ExecuteEvents.Execute<IEasyCollisionReceiver> (
+          gameObject,
+          null,
+          (tgt, y) => tgt.OnCollision (other, point0)
+        );
+      }
+      if (isHit1) {
+        ExecuteEvents.Execute<IEasyCollisionReceiver> (
+          other.gameObject,
+          null,
+          (tgt, y) => tgt.OnCollision (this, point1)
+        );
+      }
+
+    }
+
   }
 
 }
