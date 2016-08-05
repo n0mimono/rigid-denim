@@ -29,18 +29,21 @@ public class ColliderRuler : MonoBehaviour {
   void Update() {
 
     for (int i = 0; i < helpers.Length; i++) {
-      for (int j = 0; j < helpers.Length; j++) {
-        if (i == j) continue;
+      for (int j = 0; j < i; j++) {
+        ColliderHelper h0 = helpers [i];
+        ColliderHelper h1 = helpers [j];
+        if (Physics.GetIgnoreLayerCollision(h0.layer, h1.layer)) continue;
+        if (h0.HitByAABB(h1)) continue;
 
         Vector3 point0, point1;
-        bool isHit0 = helpers [i].HitTo (helpers [j], out point0);
-        bool isHit1 = helpers [j].HitTo (helpers [i], out point1);
+        bool isHit0 = h0.HitTo (h1, out point0);
+        bool isHit1 = h1.HitTo (h0, out point1);
 
         if (isHit0) {
-          helpers [i].InvokeCollisionEvent (helpers [j].gameObject, point0);
+          h0.InvokeCollisionEvent (h0.gameObject, point0);
         }
         if (isHit1) {
-          helpers [j].InvokeCollisionEvent (helpers [i].gameObject, point1);
+          h1.InvokeCollisionEvent (h1.gameObject, point1);
         }
 
       }

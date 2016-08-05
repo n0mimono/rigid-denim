@@ -76,4 +76,8 @@ public static class Utility {
 		}
 	}
 
+  public static float Max(this Vector3 vec) {
+    return Math.Max (vec.x, Mathf.Max (vec.y, vec.z));
+  }
+
 }

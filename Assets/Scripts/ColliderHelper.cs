@@ -4,11 +4,14 @@ using System.Collections.Generic;
 using System;
 
 public class ColliderHelper : MonoBehaviour {
+  public int        layer;
+
   private Transform trans;
   private bool      isMeshCollider;
 
   private Vector3[] verteces;
   private int[]     triangles;
+  private Bounds    bounds;
 
   private Vector3[] wverts;
   private float[]   distances;
@@ -21,9 +24,12 @@ public class ColliderHelper : MonoBehaviour {
 
     isMeshCollider = (collider.GetType () == typeof(MeshCollider));
     if (isMeshCollider) {
+      layer     = collider.gameObject.layer;
+
       Mesh mesh = (collider as MeshCollider).sharedMesh;
       verteces  = mesh.vertices;
       triangles = mesh.triangles;
+      bounds    = new Bounds(Vector3.zero, Vector3.one * mesh.bounds.size.Max());
       PreCalculation ();
     }
 
@@ -128,6 +134,15 @@ public class ColliderHelper : MonoBehaviour {
     }
   }
 
+  public bool HitByAABB(ColliderHelper other) {
+    Bounds curBounds = bounds;
+    curBounds.center = trans.position;
+    Bounds othBounds = other.bounds;
+    othBounds.center = other.trans.position;
+
+    return curBounds.Intersects (othBounds);
+  }
+
 }
 
 public static class ColliderHelperUtility {
@@ -195,6 +210,10 @@ public static class ColliderHelperUtility {
 
     hitPoint = revPoint;
     return isHit;
+  }
+
+  public static bool HitByAABB(this Collider collider, Collider other) {
+    return collider.GetColliderHelper().HitByAABB(other.GetColliderHelper());
   }
 
   public static void AddCollisionListener(this Collider collider, Action<GameObject, Vector3> callOnCollision) {
