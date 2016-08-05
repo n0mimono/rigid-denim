@@ -152,7 +152,7 @@ namespace EasyPhysics {
 
       for (int i = 0; i < joints.Count; i++) {
         if (joints [i] == minIndex) {
-          return joints [i];
+          return minIndex;
         }
       }
 
@@ -166,11 +166,11 @@ namespace EasyPhysics {
       Vector3 minPoint = link.wvert;
       float   minDist2 = link.dist2;
 
-      List<int> nexts = link.nexts;
-      for (int i = 0; i < nexts.Count; i++) {
+      List<int> joints = link.joints;
+      for (int i = 0; i < joints.Count; i++) {
 
         // todo: remove triangle overlap
-        List<int> tris = v2t [nexts[i]];
+        List<int> tris = v2t [joints[i]];
         for (int j = 0; j < tris.Count; j++) {
           int triangleIndex = tris [j];
           Vector3 p0 = vlinks[triangles [triangleIndex * 3 + 0]].wvert;
@@ -179,11 +179,11 @@ namespace EasyPhysics {
           Barycentric bc = new Barycentric (p0, p1, p2, point);
 
           Vector3 hitPoint = bc.InterpolateInside(p0, p1, p2);
-          float   hitDist  = Vector3.SqrMagnitude(point - hitPoint);
+          float   hitDist2 = Vector3.SqrMagnitude(point - hitPoint);
 
-          if (hitDist < minDist2) {
+          if (hitDist2 < minDist2) {
             minPoint = hitPoint;
-            minDist2  = hitDist;
+            minDist2 = hitDist2;
           }
         }
 
