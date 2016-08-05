@@ -14,8 +14,4 @@ namespace EasyPhysics {
 
   }
 
-  public interface IEasyCollisionReceiver : IEventSystemHandler {
-    void OnCollision(EasyCollider other, Vector3 hitPoint);
-  }
-
 }

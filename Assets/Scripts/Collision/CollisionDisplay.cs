@@ -2,7 +2,7 @@
 using System.Collections;
 using EasyPhysics;
 
-public class CollisionDisplay : MonoBehaviour, IEasyCollisionReceiver {
+public class CollisionDisplay : MonoBehaviour {
   public bool         isHit;
   public EasyCollider other;
   public Vector3      point;

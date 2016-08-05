@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 using System;
@@ -21,6 +20,9 @@ namespace EasyPhysics {
     private Vector3[]  wverts;
     private float[]    distances;
     private List<List<int>> v2t;
+
+    public delegate void CollisionHandler(EasyCollider other, Vector3 hitPoint);
+    public event CollisionHandler OnCollision;
 
     void Start() {
       if (initOnStart) {
@@ -146,19 +148,11 @@ namespace EasyPhysics {
       bool isHit0 = HitTo (other, out point0);
       bool isHit1 = other.HitTo (this, out point1);
 
-      if (isHit0) {
-        ExecuteEvents.Execute<IEasyCollisionReceiver> (
-          gameObject,
-          null,
-          (tgt, y) => tgt.OnCollision (other, point0)
-        );
+      if (isHit0 && OnCollision != null) {
+        OnCollision (other, point0);
       }
-      if (isHit1) {
-        ExecuteEvents.Execute<IEasyCollisionReceiver> (
-          other.gameObject,
-          null,
-          (tgt, y) => tgt.OnCollision (this, point1)
-        );
+      if (isHit1 && other.OnCollision != null) {
+        other.OnCollision (this, point1);
       }
 
     }

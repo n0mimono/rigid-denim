@@ -9,14 +9,14 @@ public class EasyColliderManagerTest : MonoBehaviour {
   public EasyColliderManager ruler;
   public CollisionDisplay[]  disps;
 
-  void Start() {
+  IEnumerator Start() {
     ruler.Initialize ();
+    yield return new WaitForSeconds (1f);
 
-    disps = GameObject
-      .FindObjectsOfType<EasyCollider> ()
-      .ToList ()
-      .Select (c => c.gameObject.AddComponent<CollisionDisplay> ())
-      .ToArray ();
+    foreach (var col in GameObject.FindObjectsOfType<EasyCollider> ()) {
+      CollisionDisplay disp = col.gameObject.AddComponent<CollisionDisplay> ();
+      col.OnCollision += disp.OnCollision;
+    }
   }
 
 }
