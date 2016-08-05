@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System;
-
+/*
 public class ColliderRulerTest : MonoBehaviour {
   public ColliderRuler ruler;
 
@@ -50,3 +50,4 @@ public class ColliderRulerTest : MonoBehaviour {
   }
 
 }
+*/

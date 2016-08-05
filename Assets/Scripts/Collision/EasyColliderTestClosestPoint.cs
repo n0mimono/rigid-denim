@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
+using EasyPhysics;
 
-public class ColliderHelperTest : MonoBehaviour {
-  public Collider  target;
-  public Transform src;
-  public Transform result;
+public class EasyColliderTestClosestPoint : MonoBehaviour {
+  public EasyCollider target;
+  public Transform    src;
+  public Transform    result;
 
   public bool useMesh;
 

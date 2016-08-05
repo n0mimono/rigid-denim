@@ -1,11 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
-
+/*
 public class ColliderRuler : MonoBehaviour {
   public bool initOnStart;
   public bool desableMeshCollider;
 
-  private ColliderHelper[] helpers;
+  private EasyCollider[] helpers;
 
   void Start() {
     if (initOnStart) {
@@ -16,7 +16,7 @@ public class ColliderRuler : MonoBehaviour {
   public void Initialize() { 
     MeshCollider[] meshCols = GameObject.FindObjectsOfType<MeshCollider> ();
 
-    helpers = new ColliderHelper[meshCols.Length];
+    helpers = new EasyCollider[meshCols.Length];
     for (int i = 0; i < helpers.Length; i++) {
       helpers[i] = meshCols [i].InitializeColliderHelper ();
       if (desableMeshCollider) {
@@ -30,8 +30,8 @@ public class ColliderRuler : MonoBehaviour {
 
     for (int i = 0; i < helpers.Length; i++) {
       for (int j = 0; j < i; j++) {
-        ColliderHelper h0 = helpers [i];
-        ColliderHelper h1 = helpers [j];
+        EasyCollider h0 = helpers [i];
+        EasyCollider h1 = helpers [j];
         if (Physics.GetIgnoreLayerCollision(h0.layer, h1.layer)) continue;
         if (h0.HitByAABB(h1)) continue;
 
@@ -52,3 +52,4 @@ public class ColliderRuler : MonoBehaviour {
   }
 
 }
+*/

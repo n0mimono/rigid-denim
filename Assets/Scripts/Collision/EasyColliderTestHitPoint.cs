@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
+using EasyPhysics;
 
-public class ColliderHitTest : MonoBehaviour {
-  public Collider src;
-  public Collider dst;
-  public Transform res;
+public class EasyColliderTestHitPoint : MonoBehaviour {
+  public EasyCollider src;
+  public EasyCollider dst;
+  public Transform    res;
 
   public bool    isHit;
   public Vector3 point;

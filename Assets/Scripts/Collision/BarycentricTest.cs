@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using EasyPhysics;
 
 public class BarycentricTest : MonoBehaviour {
   public Transform p0;
