@@ -17,9 +17,26 @@ namespace EasyPhysics {
     private Vector3[]  verteces;
     private int[]      triangles;
 
-    private Vector3[]  wverts;
-    private float[]    distances2;
     private List<List<int>> v2t;
+
+    private class Link {
+      public List<int> joints;
+      public List<int> nexts;
+      public int       stamp;
+      public Vector3   wvert;
+      public float     dist2;
+
+      public void Update(Vector3 v, Vector3 point, int ts) {
+        if (stamp != ts) {
+          wvert = v;
+          dist2 = Vector3.SqrMagnitude (point - wvert);
+          stamp = ts;
+        }
+      }
+
+    }
+    private List<Link> vlinks;
+    private int        timeStamp;
 
     public delegate void CollisionHandler(EasyCollider other, Vector3 hitPoint);
     public event CollisionHandler OnCollision;
@@ -38,10 +55,15 @@ namespace EasyPhysics {
       triangles  = mesh.triangles;
       bounds     = new Bounds(Vector3.zero, Vector3.one * mesh.bounds.size.Max());
 
-      wverts     = new Vector3[verteces.Length];
-      distances2 = new float[verteces.Length];
+      PreComputeV2T ();
+      PreComputeVertexLink ();
+    }
 
-      // pre calculations
+    public void Initialize() {
+      Initialize (GetComponent<MeshFilter> ().mesh, transform, gameObject.layer);
+    }
+
+    private void PreComputeV2T () {
       v2t = new List<List<int>> ();
       for (int i = 0; i < verteces.Length; i++) {
         v2t.Add (new List<int> ());
@@ -53,57 +75,107 @@ namespace EasyPhysics {
       }
     }
 
-    public void Initialize() {
-      Initialize (GetComponent<MeshFilter> ().mesh, transform, gameObject.layer);
+    private void PreComputeVertexLink() {
+      vlinks = new List<Link>();
+      for (int i = 0; i < verteces.Length; i++) {
+        Vector3 v = verteces [i];
+
+        List<int> joints = new List<int>();
+        List<int> nexts = new List<int> (); 
+
+        for (int j = 0; j < verteces.Length; j++) {
+          if (Vector3.SqrMagnitude (v - verteces [j]) < 1e-2) {
+            joints.Add (j);
+
+            List<int> triangleIndeces = v2t [j];
+            for (int k = 0; k < triangleIndeces.Count; k++) {
+              int triangleIndex = triangleIndeces [k];
+              int v0 = triangles [triangleIndex * 3 + 0];
+              int v1 = triangles [triangleIndex * 3 + 1];
+              int v2 = triangles [triangleIndex * 3 + 2];
+              if (!nexts.Contains (v0)) nexts.Add(v0);
+              if (!nexts.Contains (v1)) nexts.Add(v1);
+              if (!nexts.Contains (v2)) nexts.Add(v2);
+            }
+          }
+        }
+
+        Link link = new Link () {
+          joints = joints,
+          nexts = nexts
+        };
+        vlinks.Add (link);
+      }
     }
 
     public Vector3 ClosestPointOnVerteces(Vector3 point) {
-      Vector3 pos;
-      NearestDistOnVerteces(point, out pos);
-      return pos;
+      int index = NearestVertex(point, 0);
+      return vlinks[index].wvert;
     }
 
     public Vector3 ClosestPointOnMesh(Vector3 point) {
-      Vector3 pos;
-      float pointDist2 = NearestDistOnVerteces (point, out pos);
-      return FindNearestPoint (point, pointDist2, pos);
+      int index = NearestVertex(point, 0);
+      return FindNearestPoint (point, index);
     }
 
-    private float NearestDistOnVerteces(Vector3 point, out Vector3 pos) {
+    private int NearestVertex(Vector3 point, int vertIndex) {
       Matrix4x4 l2w = trans.localToWorldMatrix;
 
-      Vector3 minPoint = Vector3.zero;
-      float   minDist2 = 10000000f;
-      for (int i = 0; i < verteces.Length; i++) {
-        Vector3 v  = l2w.MultiplyPoint(verteces [i]);
-        float   d2 = Vector3.SqrMagnitude (point - v);
-        if (d2 < minDist2) {
-          minDist2 = d2;
-          minPoint = v;
-        }
+      Link link = vlinks [vertIndex];
+      List<int> joints = link.joints;
+      List<int> nexts  = link.nexts;
 
-        wverts [i] = v;
-        distances2 [i] = d2;
+      int   minIndex = 0;
+      float minDist2 = 10000000f;
+
+      for (int i = 0; i < joints.Count; i++) {
+        int idx = joints [i];
+        Link l = vlinks [idx];
+        l.Update (l2w.MultiplyPoint (verteces [idx]), point, timeStamp);
+
+        if (l.dist2 < minDist2) {
+          minIndex = idx;
+          minDist2 = l.dist2;
+        }
       }
 
-      pos   = minPoint;
-      return minDist2;
+      for (int i = 0; i < nexts.Count; i++) {
+        int idx = nexts [i];
+        Link l = vlinks [idx];
+        l.Update (l2w.MultiplyPoint (verteces [idx]), point, timeStamp);
+
+        if (l.dist2 < minDist2) {
+          minIndex = idx;
+          minDist2 = l.dist2;
+        }
+      }
+
+      for (int i = 0; i < joints.Count; i++) {
+        if (joints [i] == minIndex) {
+          return joints [i];
+        }
+      }
+
+      // recursive call
+      return NearestVertex(point, minIndex);
     }
 
-    private Vector3 FindNearestPoint(Vector3 point, float condDist2, Vector3 condPoint) {
-      Vector3 minPoint = condPoint;
-      float   minDist2 = condDist2;
+    private Vector3 FindNearestPoint(Vector3 point, int vertIndex) {
+      Link link = vlinks [vertIndex];
 
-      for (int i = 0; i < verteces.Length; i++) {
-        float d2 = distances2[i];
-        if (d2 > condDist2 + 1e-5) continue;
+      Vector3 minPoint = link.wvert;
+      float   minDist2 = link.dist2;
 
-        List<int> tris = v2t [i];
+      List<int> nexts = link.nexts;
+      for (int i = 0; i < nexts.Count; i++) {
+
+        // todo: remove triangle overlap
+        List<int> tris = v2t [nexts[i]];
         for (int j = 0; j < tris.Count; j++) {
           int triangleIndex = tris [j];
-          Vector3 p0 = wverts[triangles [triangleIndex * 3 + 0]];
-          Vector3 p1 = wverts[triangles [triangleIndex * 3 + 1]];
-          Vector3 p2 = wverts[triangles [triangleIndex * 3 + 2]];
+          Vector3 p0 = vlinks[triangles [triangleIndex * 3 + 0]].wvert;
+          Vector3 p1 = vlinks[triangles [triangleIndex * 3 + 1]].wvert;
+          Vector3 p2 = vlinks[triangles [triangleIndex * 3 + 2]].wvert;
           Barycentric bc = new Barycentric (p0, p1, p2, point);
 
           Vector3 hitPoint = bc.InterpolateInside(p0, p1, p2);
@@ -156,6 +228,9 @@ namespace EasyPhysics {
 
     }
 
+    void LateUpdate() {
+      timeStamp++;
+    }
   }
 
 }
